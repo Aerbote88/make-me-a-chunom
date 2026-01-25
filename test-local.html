@@ -1,59 +1,522 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Local Graphics.txt Tester</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nôm Stroke Data Explorer</title>
   <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
   <style>
-    body { font-family: sans-serif; padding: 20px; }
-    input { font-size: 24px; width: 100px; }
-    #writer { margin: 20px 0; border: 1px solid #ccc; }
-    button { padding: 10px 20px; margin: 5px; }
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #f5f5f5;
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    h1 {
+      color: #333;
+      margin-bottom: 10px;
+    }
+    .subtitle {
+      color: #666;
+      margin-bottom: 30px;
+    }
+    .controls {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+    .input-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 15px;
+    }
+    .char-input {
+      font-size: 32px;
+      width: 80px;
+      height: 50px;
+      text-align: center;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      font-family: 'Noto Sans CJK', 'Source Han Sans', sans-serif;
+    }
+    .char-input:focus {
+      outline: none;
+      border-color: #4a90d9;
+    }
+    button {
+      padding: 12px 24px;
+      font-size: 14px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-primary {
+      background: #4a90d9;
+      color: white;
+    }
+    .btn-primary:hover {
+      background: #357abd;
+    }
+    .btn-secondary {
+      background: #e0e0e0;
+      color: #333;
+    }
+    .btn-secondary:hover {
+      background: #d0d0d0;
+    }
+    .toggles {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .toggle input {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+    }
+    .writer-container {
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    #writer {
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      background: white;
+    }
+    .char-display {
+      font-size: 24px;
+      color: #333;
+      margin-top: 15px;
+    }
+    .info-panel {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+    .info-panel h3 {
+      margin: 0 0 15px 0;
+      color: #333;
+    }
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 15px;
+    }
+    .info-item {
+      background: #f9f9f9;
+      padding: 12px;
+      border-radius: 6px;
+    }
+    .info-label {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 4px;
+    }
+    .info-value {
+      font-size: 16px;
+      color: #333;
+      font-weight: 500;
+    }
+    .status {
+      padding: 10px 15px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+    }
+    .status.success {
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+    .status.error {
+      background: #ffebee;
+      color: #c62828;
+    }
+    .status.info {
+      background: #e3f2fd;
+      color: #1565c0;
+    }
+    .search-results {
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      max-height: 200px;
+      overflow-y: auto;
+      position: absolute;
+      width: 300px;
+      z-index: 100;
+      display: none;
+    }
+    .search-results.show {
+      display: block;
+    }
+    .search-item {
+      padding: 10px 15px;
+      cursor: pointer;
+      border-bottom: 1px solid #eee;
+      font-size: 18px;
+    }
+    .search-item:hover {
+      background: #f5f5f5;
+    }
+    .search-item:last-child {
+      border-bottom: none;
+    }
+    .search-wrapper {
+      position: relative;
+    }
+    .char-list {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .char-list h3 {
+      margin: 0 0 15px 0;
+      color: #333;
+    }
+    .char-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    .char-btn {
+      width: 40px;
+      height: 40px;
+      font-size: 20px;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Noto Sans CJK', 'Source Han Sans', sans-serif;
+    }
+    .pagination {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+      align-items: center;
+    }
+    .page-info {
+      color: #666;
+      font-size: 14px;
+    }
+    footer {
+      text-align: center;
+      color: #666;
+      font-size: 14px;
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid #ddd;
+    }
+    footer a {
+      color: #4a90d9;
+      text-decoration: none;
+    }
+    footer a:hover {
+      text-decoration: underline;
+    }
   </style>
 </head>
 <body>
-  <h1>Test Local graphics.txt</h1>
-  <input id="char" value="家">
-  <button onclick="load()">Load</button>
-  <button onclick="writer && writer.animateCharacter()">Animate</button>
-  <div id="writer"></div>
-  <pre id="info"></pre>
-  
+  <div class="container">
+    <h1>Nôm Stroke Data Explorer</h1>
+    <p class="subtitle">Preview and test stroke animation data for Vietnamese Nôm characters</p>
+
+    <div id="status" class="status info">Loading character data...</div>
+
+    <div class="controls">
+      <div class="input-row">
+        <div class="search-wrapper">
+          <input type="text" id="char" class="char-input" value="家" maxlength="2" placeholder="字">
+          <div id="search-results" class="search-results"></div>
+        </div>
+        <button class="btn-primary" onclick="load()">Load</button>
+        <button class="btn-secondary" onclick="playAnimation()">Animate</button>
+        <button class="btn-secondary" onclick="quiz()">Quiz</button>
+        <button class="btn-secondary" onclick="reset()">Reset</button>
+      </div>
+      <div class="toggles">
+        <label class="toggle">
+          <input type="checkbox" id="showMedians" onchange="load()">
+          <span>Show medians</span>
+        </label>
+      </div>
+    </div>
+
+    <div class="writer-container">
+      <div id="writer"></div>
+      <div class="char-display" id="char-display"></div>
+    </div>
+
+    <div class="info-panel">
+      <h3>Character Info</h3>
+      <div class="info-grid">
+        <div class="info-item">
+          <div class="info-label">Character</div>
+          <div class="info-value" id="info-char">-</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Unicode</div>
+          <div class="info-value"><a id="info-unicode" href="#" target="_blank" style="color: #4a90d9; text-decoration: none;">-</a></div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Strokes</div>
+          <div class="info-value" id="info-strokes">-</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Source</div>
+          <div class="info-value" id="info-source">-</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="char-list">
+      <h3>Available Characters (<span id="total-count">0</span>)</h3>
+      <div class="char-grid" id="char-grid"></div>
+      <div class="pagination">
+        <button class="btn-secondary" onclick="prevPage()">← Prev</button>
+        <span class="page-info" id="page-info">Page 1</span>
+        <button class="btn-secondary" onclick="nextPage()">Next →</button>
+      </div>
+    </div>
+
+    <footer>
+      <p>Part of <a href="https://hannom.nvnv.app" target="_blank">Nôm Na Việt (喃哪越)</a></p>
+      <p>Stroke data: <a href="https://github.com/skishore/makemeahanzi" target="_blank">Make Me a Hanzi</a> · <a href="https://github.com/nhatvu148/make-me-a-chunom" target="_blank">Make Me a Chữ Nôm</a> · <a href="https://hanziwriter.org" target="_blank">Hanzi Writer</a></p>
+    </footer>
+  </div>
+
   <script>
     let writer = null;
     let charData = {};
-    
+    let charList = [];
+    let currentPage = 0;
+    const pageSize = 100;
+
     // Load graphics.txt
     fetch('graphics.txt')
       .then(r => r.text())
       .then(text => {
         text.split('\n').filter(l => l).forEach(line => {
-          const d = JSON.parse(line);
-          charData[d.character] = d;
+          try {
+            const d = JSON.parse(line);
+            charData[d.character] = d;
+            charList.push(d.character);
+          } catch (e) {}
         });
-        document.getElementById('info').textContent = 'Loaded ' + Object.keys(charData).length + ' characters from graphics.txt';
+        document.getElementById('status').className = 'status success';
+        document.getElementById('status').textContent = `Loaded ${charList.length} characters from graphics.txt`;
+        document.getElementById('total-count').textContent = charList.length;
+        renderCharGrid();
         load();
+      })
+      .catch(err => {
+        document.getElementById('status').className = 'status error';
+        document.getElementById('status').textContent = 'Failed to load graphics.txt: ' + err.message;
       });
-    
+
+    function renderCharGrid() {
+      const grid = document.getElementById('char-grid');
+      const start = currentPage * pageSize;
+      const end = Math.min(start + pageSize, charList.length);
+      const chars = charList.slice(start, end);
+
+      grid.innerHTML = chars.map(c =>
+        `<button class="char-btn btn-secondary" onclick="loadChar('${c}')">${c}</button>`
+      ).join('');
+
+      const totalPages = Math.ceil(charList.length / pageSize);
+      document.getElementById('page-info').textContent = `Page ${currentPage + 1} of ${totalPages}`;
+    }
+
+    function prevPage() {
+      if (currentPage > 0) {
+        currentPage--;
+        renderCharGrid();
+      }
+    }
+
+    function nextPage() {
+      const totalPages = Math.ceil(charList.length / pageSize);
+      if (currentPage < totalPages - 1) {
+        currentPage++;
+        renderCharGrid();
+      }
+    }
+
+    function loadChar(char) {
+      document.getElementById('char').value = char;
+      load();
+    }
+
     function load() {
-      const char = document.getElementById('char').value;
+      const char = document.getElementById('char').value.trim();
+      if (!char) return;
+
       const data = charData[char];
       if (!data) {
-        document.getElementById('info').textContent = 'Character not found: ' + char;
+        document.getElementById('status').className = 'status error';
+        document.getElementById('status').textContent = `Character not found: ${char} (U+${char.codePointAt(0).toString(16).toUpperCase()})`;
+        document.getElementById('info-char').textContent = char;
+        const unicodeHex = char.codePointAt(0).toString(16).toUpperCase().padStart(4, '0');
+        document.getElementById('info-unicode').textContent = 'U+' + unicodeHex;
+        document.getElementById('info-unicode').href = 'https://www.unicode.org/cgi-bin/GetUnihanData.pl?codepoint=' + unicodeHex;
+        document.getElementById('info-strokes').textContent = '-';
+        document.getElementById('info-source').textContent = 'Not available';
         return;
       }
-      
+
+      const showMedians = document.getElementById('showMedians').checked;
+
       document.getElementById('writer').innerHTML = '';
-      writer = HanziWriter.create('writer', char, {
-        width: 300, height: 300,
-        showOutline: true,
+
+      const options = {
+        width: 300,
+        height: 300,
+        strokeColor: '#2563eb',      // blue-600
+        drawingColor: '#1e40af',     // blue-800
+        strokeAnimationSpeed: 1,
+        delayBetweenStrokes: 200,
         charDataLoader: () => Promise.resolve(data)
-      });
-      
-      document.getElementById('info').textContent = 
-        char + ': ' + data.strokes.length + ' strokes\n' +
-        'Medians: ' + JSON.stringify(data.medians[0]);
+      };
+
+      writer = HanziWriter.create('writer', char, options);
+
+      // Show medians overlay if enabled
+      if (showMedians && data.medians) {
+        setTimeout(() => {
+          const svg = document.querySelector('#writer svg');
+          if (svg) {
+            // Find the existing transform group to match coordinate system
+            const existingG = svg.querySelector('g');
+            const transform = existingG ? existingG.getAttribute('transform') : '';
+
+            const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+            g.setAttribute('transform', transform);
+            g.setAttribute('id', 'median-overlay');
+
+            data.medians.forEach((median, i) => {
+              const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+              const d = median.map((p, j) => (j === 0 ? 'M' : 'L') + p[0] + ' ' + p[1]).join(' ');
+              path.setAttribute('d', d);
+              path.setAttribute('stroke', '#ef4444');  // red-500
+              path.setAttribute('stroke-width', '3');
+              path.setAttribute('fill', 'none');
+              path.setAttribute('stroke-linecap', 'round');
+              path.setAttribute('stroke-linejoin', 'round');
+              g.appendChild(path);
+            });
+            svg.appendChild(g);
+          }
+        }, 200);
+      }
+
+      // Update info
+      const codepoint = char.codePointAt(0);
+      const isExtensionB = codepoint > 0xFFFF;
+
+      document.getElementById('char-display').textContent = char;
+      document.getElementById('info-char').textContent = char;
+      const unicodeHexSuccess = codepoint.toString(16).toUpperCase().padStart(4, '0');
+      document.getElementById('info-unicode').textContent = 'U+' + unicodeHexSuccess;
+      document.getElementById('info-unicode').href = 'https://www.unicode.org/cgi-bin/GetUnihanData.pl?codepoint=' + unicodeHexSuccess;
+      document.getElementById('info-strokes').textContent = data.strokes.length;
+      document.getElementById('info-source').textContent = isExtensionB ? 'Custom Nôm' : 'Make Me a Hanzi';
+
+      document.getElementById('status').className = 'status success';
+      document.getElementById('status').textContent = `Loaded: ${char} (${data.strokes.length} strokes)`;
     }
+
+    function playAnimation() {
+      if (writer) {
+        writer.animateCharacter();
+      }
+    }
+
+    function quiz() {
+      if (writer) {
+        writer.quiz({
+          onComplete: (summary) => {
+            document.getElementById('status').className = 'status success';
+            document.getElementById('status').textContent = `Quiz complete! Mistakes: ${summary.totalMistakes}`;
+          }
+        });
+      }
+    }
+
+    function reset() {
+      if (writer) {
+        writer.hideCharacter();
+        writer.showCharacter();
+      }
+    }
+
+    // Search functionality
+    const charInput = document.getElementById('char');
+    const searchResults = document.getElementById('search-results');
+
+    charInput.addEventListener('input', (e) => {
+      const query = e.target.value.trim();
+      if (query.length === 0) {
+        searchResults.classList.remove('show');
+        return;
+      }
+
+      // If it's a full character, just load it
+      if (charData[query]) {
+        searchResults.classList.remove('show');
+        return;
+      }
+
+      // Search by codepoint if starts with U+ or 0x
+      if (query.toLowerCase().startsWith('u+') || query.toLowerCase().startsWith('0x')) {
+        const hex = query.replace(/^(u\+|0x)/i, '');
+        const codepoint = parseInt(hex, 16);
+        if (!isNaN(codepoint)) {
+          const char = String.fromCodePoint(codepoint);
+          if (charData[char]) {
+            charInput.value = char;
+            load();
+          }
+        }
+        searchResults.classList.remove('show');
+        return;
+      }
+
+      searchResults.classList.remove('show');
+    });
+
+    charInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        load();
+      }
+    });
   </script>
 </body>
 </html>
