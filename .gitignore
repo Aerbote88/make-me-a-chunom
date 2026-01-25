@@ -1,0 +1,9 @@
+*.pyc
+*.swp
+.DS_Store
+.svgs
+dictionary.txt
+graphics.txt
+server/output/*.json
+stroke_caps/node_modules/
+#stroke_caps

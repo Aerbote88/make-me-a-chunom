@@ -1,0 +1,137 @@
+<template name="path_stage">
+  Choose a source for glyph path data for this character:
+  <div class="options">
+    {{#each options}}
+      <a class="option">{{label}}</a>
+      <div class="separator">•</div>
+    {{/each}}
+  </div>
+  <div class="alternative">
+    Alternatively, use part of a glyph from another character:
+    {{{editable "alternative" alternative}}}
+  </div>
+</template>
+
+<template name="bridges_stage">
+  Connect each pair of path points such that the segment between those points
+  is part of some stroke outline. Click on two points to connect them by a
+  bridge, or click on a bridge to drop it. If there are not enough points,
+  control-click to create a new one along the nearest curve. The point can
+  then be clicked on to create a bridge, or else it will be removed.
+</template>
+
+<template name="strokes_stage">
+  Select paths to include in the glyph by clicking on them. The final number of
+  strokes must agree with the stroke count in the character metadata.
+</template>
+
+<template name="analysis_stage">
+  Decompose the character into components, if possible. Additionally, if the
+  character is a phonetic-semantic compound, mark the components that play each
+  of those roles.
+
+  <div class="decomposition">
+    {{> tree decomposition_data}}
+  </div>
+  <div class="radical">
+    <label class="control-label">Radical:</label>
+    {{{editable "radical" radical}}}
+  </div>
+  {{> etymology etymology_data}}
+</template>
+
+<template name="tree">
+  <div class="tree" style="margin-left: {{path.length}}em;">
+    <select class="form-control subtree-type">
+      <option {{selected type "character"}}>Character</option>
+      <option {{selected type "compound"}}>Compound</option>
+    </select>
+    {{#if (equals type "character")}}
+      {{{editable "character" value}}}
+      {{#if (equals value "?")}}
+        (unknown)
+      {{else}}
+        <a class="link" href="#{{value}}">{{details value}}</a>
+      {{/if}}
+    {{/if}}
+    {{#if (equals type "compound")}}
+      <select class="form-control compound-type">
+        {{#each compounds value}}
+          <option {{selected value compound}}>{{label}}</option>
+        {{/each}}
+      </select>
+    {{/if}}
+  </div>
+  {{#each children}}
+    {{> tree this}}
+  {{/each}}
+</template>
+
+<template name="etymology">
+  <div class="etymology">
+    <label class="control-label">Etymology:</label>
+    <select class="form-control etymology-type">
+      <option {{selected type "ideographic"}}>Ideographic</option>
+      <option {{selected type "pictographic"}}>Pictographic</option>
+      <option {{selected type "pictophonetic"}}>Pictophonetic</option>
+    </select>
+    {{#if (equals type "pictophonetic")}}
+      <div class="component">
+        {{{editable "semantic" semantic}}}
+        ({{{editable "hint" hint}}}) provides the meaning while
+        {{{editable "phonetic" phonetic}}} provides the pronunciation.
+      </div>
+    {{else}}
+      {{{editable "hint" hint}}}
+    {{/if}}
+  </div>
+</template>
+
+<template name="order_stage">
+  Click on the strokes to the right to set the component they belong to.
+  Then reorder the strokes by clicking and dragging elements in the list below.
+  {{#each components}}
+    <div class="component" style="top: {{top}};">
+      {{> glyph glyph}}
+      <div class="clear"></div>
+    </div>
+  {{/each}}
+  <div class="character">
+    {{> glyph character}}
+  </div>
+  <div class="permutation">
+    {{#sortable items=items options=options sortField="index"}}
+      <div class="entry" style="background-color: {{background}};
+                                border-color: {{color}};">
+        <a class="reverse">Reverse</a>
+        <div class="small">{{> glyph glyph}}</div>
+        <div class="clear"></div>
+        <div class="character">{{> glyph glyph}}</div>
+      </div>
+    {{/sortable}}
+  </div>
+</template>
+
+<template name="glyph">
+  <svg viewbox="0 0 1024 1024">
+    <defs>
+      <marker id="arrow" markerWidth="4" markerHeight="4"
+              orient="auto" refX="3" refY="2">
+        <path d="M0,0 L0,4 L4,2 L0,0" style="fill: red;"></path>
+      </marker>
+    </defs>
+    <g transform="scale(1, -1) translate(0, -900)">
+      {{#each paths}}
+        <path class="{{cls}}" fill="{{fill}}"
+              stroke="{{stroke}}" d="{{d}}"></path>
+      {{/each}}
+      {{#each lines}}
+        <line x1="{{x1}}" y1="{{y1}}" x2="{{x2}}" y2="{{y2}}"></line>
+      {{/each}}
+    </g>
+  </svg>
+</template>
+
+<template name="verified_stage">
+  {{> animation data}}
+</template>

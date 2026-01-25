@@ -1,0 +1,21 @@
+# Meteor packages used by this project, one per line.
+
+meteor-base@1.5.2
+mobile-experience@1.1.2
+mongo@2.0.1
+blaze-html-templates@3.0.0
+session@1.2.2
+jquery@3.0.1
+tracker@1.3.4
+logging@1.3.5
+reload@1.3.2
+random@1.2.2
+ejson@1.1.4
+spacebars@2.0.0
+check@1.4.3
+ecmascript@0.16.10
+less@4.0.1
+standard-minifier-css@1.9.3
+standard-minifier-js@3.0.0
+shell-server@0.6.0
+typescript@5.4.3

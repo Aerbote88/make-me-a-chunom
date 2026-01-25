@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Local Graphics.txt Tester</title>
+  <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    input { font-size: 24px; width: 100px; }
+    #writer { margin: 20px 0; border: 1px solid #ccc; }
+    button { padding: 10px 20px; margin: 5px; }
+  </style>
+</head>
+<body>
+  <h1>Test Local graphics.txt</h1>
+  <input id="char" value="家">
+  <button onclick="load()">Load</button>
+  <button onclick="writer && writer.animateCharacter()">Animate</button>
+  <div id="writer"></div>
+  <pre id="info"></pre>
+  
+  <script>
+    let writer = null;
+    let charData = {};
+    
+    // Load graphics.txt
+    fetch('graphics.txt')
+      .then(r => r.text())
+      .then(text => {
+        text.split('\n').filter(l => l).forEach(line => {
+          const d = JSON.parse(line);
+          charData[d.character] = d;
+        });
+        document.getElementById('info').textContent = 'Loaded ' + Object.keys(charData).length + ' characters from graphics.txt';
+        load();
+      });
+    
+    function load() {
+      const char = document.getElementById('char').value;
+      const data = charData[char];
+      if (!data) {
+        document.getElementById('info').textContent = 'Character not found: ' + char;
+        return;
+      }
+      
+      document.getElementById('writer').innerHTML = '';
+      writer = HanziWriter.create('writer', char, {
+        width: 300, height: 300,
+        showOutline: true,
+        charDataLoader: () => Promise.resolve(data)
+      });
+      
+      document.getElementById('info').textContent = 
+        char + ': ' + data.strokes.length + ' strokes\n' +
+        'Medians: ' + JSON.stringify(data.medians[0]);
+    }
+  </script>
+</body>
+</html>

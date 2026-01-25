@@ -1,0 +1,15 @@
+{
+  "name": "make-me-a-hanzi-tool",
+  "private": true,
+  "scripts": {
+    "start": "meteor run"
+  },
+  "dependencies": {
+    "@babel/runtime": "^7.24.0",
+    "jquery": "^3.7.1",
+    "lodash": "^4.17.21",
+    "meteor-node-stubs": "^1.2.9",
+    "sortablejs": "^1.15.2",
+    "underscore.string": "^3.3.6"
+  }
+}

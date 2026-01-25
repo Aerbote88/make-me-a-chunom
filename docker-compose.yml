@@ -1,0 +1,24 @@
+services:
+  mongo:
+    image: mongo:7.0
+    container_name: stroke-editor-mongo
+    ports:
+      - "37017:27017"
+    volumes:
+      - stroke-mongo-data:/data/db
+
+  editor:
+    build: .
+    container_name: stroke-editor
+    ports:
+      - "3000:3000"
+    depends_on:
+      - mongo
+    environment:
+      - MONGO_URL=mongodb://mongo:27017/makemeahanzi
+      - ROOT_URL=http://localhost:3000
+    volumes:
+      - ./server/output:/app/server/output
+
+volumes:
+  stroke-mongo-data:

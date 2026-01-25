@@ -1,0 +1,352 @@
+// Bootstrap style overrides.
+.panel-title {
+    font-size: 16px;
+
+    a {
+        color: #8cf;
+    }
+}
+
+.progress {
+    height: 18px;
+    margin-bottom: 0;
+}
+
+div.value[contenteditable="true"] {
+    border: 1px dotted #666;
+    display: inline-block;
+    margin-left: 4px;
+    min-width: 24px;
+    padding: 0 4px;
+    text-align: center;
+}
+
+// Styling for the 'navbar' template.
+#navbar {
+    cursor: default !important;
+    -webkit-user-select: none !important;
+
+    .navbar-brand:hover {
+        color: white !important;
+    }
+
+    .progress {
+        float: right;
+        margin-top: 21px;
+        margin-right: -3px;
+        width: 298px;
+
+        .progress-bar span {
+            color: rgb(44, 62, 80);
+            font-size: 14px;
+            line-height: 18px;
+            padding-left: 4px;
+        }
+    }
+
+    .navbar-right {
+        margin-right: 12px;
+
+        .navbar-brand {
+            -webkit-user-select: none !important;
+            cursor: pointer;
+            font-size: 30px;
+            line-height: 60px;
+            min-width: 60px;
+            padding: 0;
+            text-align: center;
+
+            &:hover {
+                background-color: rgb(66, 93, 132);
+            }
+
+            &.disabled,
+            &.disabled:hover {
+                background-color: inherit;
+                cursor: default;
+                color: rgb(110, 155, 220) !important;
+            }
+        }
+    }
+}
+
+// Styling for the 'editor' template.
+#editor {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 60px;
+    bottom: 0;
+
+    .left-pane {
+        float: left;
+        width: 680px;
+
+        .metadata,
+        .status {
+            margin: 16px;
+        }
+
+        .metadata {
+            .field {
+                margin: 12px 0 4px;
+
+                .control-label {
+                    margin-right: 4px;
+                    text-align: right;
+                    width: 96px;
+                }
+            }
+
+            .coord,
+            .reference,
+            .separator {
+                display: inline-block;
+                margin: 0 4px 4px 0;
+            }
+
+            .separator:last-child {
+                visibility: hidden;
+            }
+        }
+
+        .status {
+            .template {
+                margin: 8px 8px 4px;
+            }
+
+            .log {
+                margin-bottom: 0;
+
+                .line {
+                    list-style: none;
+                    margin: 6px 0;
+                    position: relative;
+
+                    &.error {
+                        color: red;
+                    }
+
+                    &.success {
+                        color: green;
+                    }
+
+                    &:before {
+                        content: "•";
+                        position: absolute;
+                        transform: translate(-50%, -50%) translateY(-1px);
+                        left: -12px;
+                        top: 50%;
+                    }
+                }
+            }
+        }
+    }
+
+    svg {
+        float: left;
+        height: 100%;
+        margin: 0 auto;
+
+        path.selectable:hover,
+        line.selectable:hover {
+            cursor: pointer;
+            stroke: blue;
+            stroke-width: 8;
+        }
+
+        circle.selectable:hover {
+            cursor: pointer;
+            fill: blue;
+            stroke: blue;
+        }
+
+        circle.new {
+            fill: yellow;
+            stroke: yellow;
+        }
+
+        path.animation {
+            fill: none;
+            stroke: black;
+            stroke-linecap: round;
+            stroke-width: 128;
+        }
+    }
+}
+
+#editor .status .template {
+    &.path_stage {
+        .options {
+            display: inline-block;
+
+            .option,
+            .separator {
+                display: inline-block;
+                margin-left: 4px;
+            }
+
+            .option {
+                cursor: pointer;
+            }
+
+            .separator:last-child {
+                visibility: hidden;
+            }
+        }
+
+        .alternative {
+            margin: 8px 0;
+        }
+    }
+
+    &.analysis_stage {
+        .control-label {
+            margin: 0 4px 0 0;
+        }
+
+        .decomposition,
+        .radical,
+        .etymology {
+            margin: 18px 0;
+
+            .tree,
+            .component {
+                margin: 6px 0;
+            }
+
+            .component div.value {
+                margin: 0;
+            }
+
+            .form-control {
+                background-color: #f8f8f8;
+                display: inline-block;
+                height: 28px;
+                padding: 0;
+                width: auto;
+            }
+
+            .header {
+                display: inline-block;
+                margin-right: 4px;
+                text-align: right;
+                width: 150px;
+            }
+        }
+    }
+
+    &.order_stage {
+        .character {
+            border: 1px dotted gray;
+            margin: 8px 0;
+            position: absolute;
+
+            left: 818px;
+            right: 16px;
+            top: 8px;
+        }
+
+        .component {
+            border: 1px dotted gray;
+            margin: 8px 0;
+            position: absolute;
+            text-align: center;
+
+            left: 680px;
+            width: 122px;
+
+            svg {
+                float: none;
+                height: 120px;
+                width: 120px;
+            }
+
+            .clear {
+                clear: both;
+                margin-bottom: -5px;
+            }
+        }
+
+        .permutation {
+            margin: 8px 0;
+
+            .entry {
+                border: 1px dotted gray;
+                cursor: pointer;
+                margin: 0;
+                padding: 2px 8px;
+
+                .background {
+                    opacity: 0.1;
+                    position: absolute;
+
+                    bottom: 0;
+                    left: 0;
+                    right: 0;
+                    top: 0;
+                }
+
+                .reverse {
+                    float: right;
+                }
+
+                .small svg {
+                    height: 24px;
+                    width: 24px;
+                }
+
+                .clear {
+                    clear: both;
+                }
+
+                .character {
+                    display: none;
+
+                    line {
+                        marker-end: url(#arrow);
+                        stroke: red;
+                        stroke-width: 16;
+                    }
+                }
+
+                &:hover .character {
+                    display: block;
+                }
+            }
+        }
+    }
+
+    &.verified_stage {
+        svg {
+            margin: 0;
+            position: absolute;
+
+            left: 680px;
+            top: 0;
+        }
+    }
+}
+
+code {
+    background: hsl(220, 80%, 90%);
+    padding: 2px;
+}
+
+.keybinds {
+    position: absolute;
+    bottom: 1em;
+    left: 1em;
+    display: none;
+
+    &:last-child {
+        padding: 1em;
+    }
+}
+
+.popup {
+    position: absolute;
+    display: block;
+    top: 0;
+    left: 0;
+}

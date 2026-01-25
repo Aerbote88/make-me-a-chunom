@@ -1,0 +1,163 @@
+<head>
+  <title>Hanzi decomposition</title>
+</head>
+<body>
+  {{> navbar}} {{> modal}} {{> editor}}
+</body>
+
+<template name="navbar">
+  <div id="navbar" class="navbar navbar-default navbar-static-top">
+    <div class="container-fluid">
+      <div class="navbar-header">
+        <div class="navbar-brand">Hanzi decomposition</div>
+      </div>
+      <div class="progress">
+        <div
+          class="progress-bar progress-bar-warning active"
+          role="progressbar"
+          style="width: {{percent}}%"
+          aria-valuenow="{{percent}}"
+          aria-valuemin="0"
+          aria-valuemax="100"
+        >
+          <span>{{complete}}/{{total}}</span>
+        </div>
+      </div>
+      <div class="navbar-right">
+        <div class="backup navbar-brand {{backup}}">&#x270e;</div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<template name="modal">
+  <div
+    id="modal"
+    class="modal fade"
+    tabindex="2"
+    data-backdrop="static"
+    data-keyboard="false"
+  >
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-body">{{text}}</div>
+        <div class="modal-footer">
+          <div class="progress">
+            <div
+              class="progress-bar progress-bar-striped active"
+              role="progressbar"
+              style="width: {{percent}}%"
+              aria-valuenow="{{percent}}"
+              aria-valuemin="0"
+              aria-valuemax="100"
+            ></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<template name="editor">
+  <div id="editor">
+    <div class="popup panel panel-primary">shadfbu</div>
+    <div class="left-pane">
+      {{> metadata}} {{> status}}
+      <div class="keybinds panel panel-primary">
+        <code>a</code> get previous glyph<br />
+        <code>A</code> get previous unverified glyph<br />
+        <code>q</code> get previous verified glyph<br />
+        <code>d</code> get next glyph<br />
+        <code>D</code> get next unverified glyph<br />
+        <code>e</code> get next verified glyph<br />
+        <code>r</code> reset stage<br />
+        <code>s</code> previous stage<br />
+        <code>w</code> next stage<br />
+        <code>C-click</code> create a point<br />
+        <code>1</code>-<code>9</code> open reference<br />
+        <code>B</code> toggles this popup<br />
+      </div>
+    </div>
+    <svg viewbox="0 0 1024 1024" style="border: 1px solid">
+      <g transform="scale(1, -1) translate(0, -900)">
+        {{#each paths}}
+        <path
+          class="{{cls}}"
+          fill="{{fill}}"
+          stroke="{{stroke}}"
+          d="{{d}}"
+        ></path>
+        {{/each}} {{#each lines}}
+        <line
+          class="{{cls}}"
+          stroke="{{stroke}}"
+          stroke-width="8"
+          x1="{{x1}}"
+          y1="{{y1}}"
+          x2="{{x2}}"
+          y2="{{y2}}"
+        ></line>
+        {{/each}} {{#each points}}
+        <circle
+          class="{{cls}}"
+          fill="{{fill}}"
+          stroke="{{stroke}}"
+          cx="{{cx}}"
+          cy="{{cy}}"
+          r="8"
+        ></circle>
+        {{/each}} {{#each animations}}
+        <clipPath id="{{clip}}">
+          <path d="{{stroke}}"></path>
+        </clipPath>
+        <path
+          class="animation"
+          clip-path="url(#{{clip}})"
+          d="{{median}}"
+          stroke-dasharray="{{length}} {{spacing}}"
+          stroke-dashoffset="{{advance}}"
+        />
+        {{/each}}
+      </g>
+    </svg>
+  </div>
+</template>
+
+<template name="metadata">
+  <div class="panel panel-primary metadata" style="display: {{display}};">
+    <div class="panel-heading">
+      <h3 class="panel-title">
+        Metadata for {{rank}} - {{character}} {{#if simplified}} -
+        <a href="#{{simplified}}">(simplified: {{simplified}})</a>
+        {{/if}}
+      </h3>
+    </div>
+    {{#each items}}
+    <div class="field">
+      <label class="control-label" placeholder="(unknown)">{{label}}</label>
+      {{{editable field value}}}{{separator}}{{{extra}}}
+    </div>
+    {{/each}}
+    <div class="field">
+      <label class="control-label">References:</label>
+      {{#each references}}
+      <a class="reference" href="{{href}}" target="_blank">{{label}}</a>
+      <div class="separator">•</div>
+      {{/each}}
+    </div>
+  </div>
+</template>
+
+<template name="status">
+  <div class="panel panel-primary status">
+    <div class="panel-heading">
+      <h3 class="panel-title">Edit {{stage}}</h3>
+    </div>
+    <div class="template {{template}}">{{> UI.dynamic template=template}}</div>
+    <ul class="log">
+      {{#each lines}}
+      <li class="line {{cls}}">{{message}}</li>
+      {{/each}}
+    </ul>
+  </div>
+</template>
