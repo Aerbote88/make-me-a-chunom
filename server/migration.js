@@ -297,6 +297,29 @@ Meteor.methods({
   },
 });
 
+// HTTP endpoint to trigger export (for automation from external apps)
+import { WebApp } from 'meteor/webapp';
+
+WebApp.connectHandlers.use('/api/export', async (req, res) => {
+  // Only allow POST
+  if (req.method !== 'POST') {
+    res.writeHead(405, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ success: false, error: 'Method not allowed' }));
+    return;
+  }
+
+  try {
+    await cjklib.promise;
+    await dumpToNewSchemaJSON();
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ success: true, message: 'Export completed' }));
+  } catch (error) {
+    console.error('Export API error:', error);
+    res.writeHead(500, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ success: false, error: error.message }));
+  }
+});
+
 Meteor.startup(() => {
   // SSR package no longer available in Meteor 3.x
   // SSR.compileTemplate('animation', Assets.getText('animation.html'));
