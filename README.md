@@ -93,6 +93,16 @@ Then open: http://localhost:8992/test-local.html
 
 Type any character and click **Animate** to verify the stroke data.
 
+## Validate Stroke Data
+
+Validate stroke data files:
+
+```bash
+npm run validate
+# or
+task validate
+```
+
 ## Data Format
 
 The exported data is compatible with [hanzi-writer](https://github.com/chanind/hanzi-writer):

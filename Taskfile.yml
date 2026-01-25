@@ -1,0 +1,53 @@
+version: '3'
+
+tasks:
+  # ============================================================================
+  # Editor Tasks
+  # ============================================================================
+
+  run:
+    desc: "Run the stroke editor via Docker (MongoDB + Meteor 3.x)"
+    cmds:
+      - echo "Building and starting stroke editor..."
+      - echo "Open http://localhost:3000/#家 in your browser"
+      - docker compose up --build
+
+  stop:
+    desc: "Stop the stroke editor containers"
+    cmds:
+      - docker compose down
+
+  clean:
+    desc: "Stop and remove stroke editor containers and volumes"
+    cmds:
+      - docker compose down -v
+
+  test:
+    desc: "Test stroke animations from graphics.txt"
+    cmds:
+      - echo "Open http://localhost:8992/test-local.html"
+      - python3 -m http.server 8992
+
+  # ============================================================================
+  # Validation Tasks
+  # ============================================================================
+
+  validate:
+    desc: "Validate stroke data files"
+    cmds:
+      - npm install --silent
+      - npm run validate
+
+  # ============================================================================
+  # Development Tasks
+  # ============================================================================
+
+  install:
+    desc: "Install npm dependencies"
+    cmds:
+      - npm install
+
+  dev:
+    desc: "Run Meteor in development mode (requires local Meteor installation)"
+    cmds:
+      - meteor run
