@@ -68,9 +68,13 @@ In the browser console:
 Meteor.call('export')
 ```
 
-This creates:
-- `graphics.txt` - Stroke paths and medians (for hanzi-writer)
-- `dictionary.txt` - Definitions, decomposition, etymology
+This creates (in `public/` folder):
+- `graphics_export.txt` - Stroke paths and medians (for hanzi-writer)
+- `dictionary_export.txt` - Definitions, decomposition, etymology
+
+The main data files are:
+- `public/graphics.txt` - Main stroke data file
+- `public/dictionary.txt` - Main dictionary file
 
 ### Export Individual JSON Files
 
@@ -83,13 +87,14 @@ Creates individual character files in `server/output/` folder.
 
 ## Test Stroke Animations
 
-To preview animations from your local `graphics.txt`:
+To preview animations from your local `public/graphics.txt`:
 
 ```bash
+cd public
 python3 -m http.server 8992
 ```
 
-Then open: http://localhost:8992/test-local.html
+Then open: http://localhost:8992/index.html
 
 Type any character and click **Animate** to verify the stroke data.
 

@@ -11,14 +11,15 @@ services:
     build: .
     container_name: stroke-editor
     ports:
-      - "3000:3000"
+      - "3579:3000"
     depends_on:
       - mongo
     environment:
       - MONGO_URL=mongodb://mongo:27017/makemeahanzi
-      - ROOT_URL=http://localhost:3000
+      - ROOT_URL=http://localhost:3579
     volumes:
       - ./server/output:/app/server/output
+      - ./public:/app/public
 
 volumes:
   stroke-mongo-data:

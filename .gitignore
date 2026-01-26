@@ -2,9 +2,9 @@
 *.swp
 .DS_Store
 .svgs
-dictionary.txt
-dictionary_export.txt
-graphics_export.txt
+# Export files (temporary, merged into main files)
+public/dictionary_export.txt
+public/graphics_export.txt
 server/output/*.json
 stroke_caps/node_modules/
 #stroke_caps

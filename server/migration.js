@@ -201,8 +201,8 @@ const dumpToNewSchemaJSON = async () => {
   const pwd = getPWD();
 
   // Export to separate files (don't overwrite main graphics.txt!)
-  const dictionaryPath = path.join(pwd, 'dictionary_export.txt');
-  const graphicsPath = path.join(pwd, 'graphics_export.txt');
+  const dictionaryPath = path.join(pwd, 'public', 'dictionary_export.txt');
+  const graphicsPath = path.join(pwd, 'public', 'graphics_export.txt');
   console.log(`Writing export files to: ${graphicsPath}`);
 
   const dictionary = fs.createWriteStream(dictionaryPath);
