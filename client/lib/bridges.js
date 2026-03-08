@@ -79,21 +79,22 @@ class BridgesStage extends AbstractStage {
     this.temp_points = closest;
 
     var idx = 0;
+    let bestT = 0;
 
-    let t = 0;
     this.endpoints.forEach((e, i) => {
       let seg = e.segments[0];
-      let c;
-      [c, t] = closestPointToBezier(seg.start, seg.end, seg.control, sp);
+      let [c, t] = closestPointToBezier(seg.start, seg.end, seg.control, sp);
       let d = Point.distance2(c, sp);
 
       if (d < min) {
         min = d;
         closest = c;
         idx = i;
+        bestT = t;
       }
     });
 
+    let t = bestT;
     let start = this.endpoints[idx].segments[0].start;
     let end = this.endpoints[idx].segments[0].end;
     let control = this.endpoints[idx].segments[0].control;
@@ -104,6 +105,15 @@ class BridgesStage extends AbstractStage {
     let exterior = sector % 2 == 0; //exterior paths are anti-clockwise
     let newIndex = [sector, exterior ? endpoint_idx - 1 : endpoint_idx + 1];
 
+    // De Casteljau split: compute new control points for the two sub-segments
+    // For linear segments (no control point), sub-segments are also linear.
+    let newControl1 = undefined;
+    let newControl2 = undefined;
+    if (control !== undefined) {
+      newControl1 = Point.add(Point.scale(start, 1 - t), Point.scale(control, t));
+      newControl2 = Point.add(Point.scale(control, 1 - t), Point.scale(end, t));
+    }
+
     this.endpoints.splice(
       newIndex[1],
       0,
@@ -112,24 +122,17 @@ class BridgesStage extends AbstractStage {
           [
             {
               start: start,
-              control: Point.add(
-                Point.scale(1 - t, start),
-                Point.scale(t, control),
-              ),
+              control: newControl1,
               end: closest,
             },
             {
               start: closest,
-              control: Point.add(
-                Point.scale(1 - t, closest),
-                Point.scale(t, end),
-              ),
+              control: newControl2,
               end: end,
             },
           ],
         ],
         newIndex,
-        true,
       ),
     );
     // console.log(this.endpoints[idx]);
