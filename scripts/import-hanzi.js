@@ -72,8 +72,11 @@ const codepointOf = (ch) => {
 const buildGlyph = (ch, g, d) => {
   const strokes = (g && g.strokes) || [];
   const medians = (g && g.medians) || [];
-  const order = strokes.map((stroke, i) => ({
-    stroke,
+  // order[i].stroke is the INDEX into stages.strokes.corrected, not the path.
+  // dumpGlyph (server/migration.js) does corrected[x.stroke] to rebuild the
+  // per-stroke output, so this must be a number.
+  const order = strokes.map((_stroke, i) => ({
+    stroke: i,
     median: medians[i] || [],
   }));
   const analysis = {
@@ -87,7 +90,12 @@ const buildGlyph = (ch, g, d) => {
     metadata: {
       strokes: strokes.length,
       definition: (d && d.definition) || undefined,
-      pinyin: (d && d.pinyin) || [],
+      // dumpGlyph in server/migration.js calls .split(',') on metadata.pinyin,
+      // so it must be a string (or falsy to fall through to cjklib's string).
+      pinyin:
+        d && Array.isArray(d.pinyin) && d.pinyin.length > 0
+          ? d.pinyin.join(",")
+          : undefined,
     },
     stages: {
       path: "",

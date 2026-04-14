@@ -72,6 +72,7 @@
         <code>e</code> get next verified glyph<br />
         <code>r</code> reset stage<br />
         <code>s</code> previous stage<br />
+        <code>t</code> next unverified in Truyện Kiều<br />
         <code>w</code> next stage<br />
         <code>C-click</code> create a point<br />
         <code>1</code>-<code>9</code> open reference<br />
@@ -129,6 +130,8 @@
       <h3 class="panel-title">
         Metadata for {{rank}} - {{character}} {{#if simplified}} -
         <a href="#{{simplified}}">(simplified: {{simplified}})</a>
+        {{/if}} {{#if truyenKieuPosition}}
+        <small>• Truyện Kiều {{truyenKieuPosition}}</small>
         {{/if}}
       </h3>
     </div>

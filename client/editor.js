@@ -10,6 +10,38 @@ import { cjklib } from "/lib/cjklib";
 import _ from "lodash";
 
 Session.set("editor.glyph", undefined);
+Session.set("queue.truyenKieu", undefined);
+
+const loadTruyenKieuQueue = () => {
+  fetch("/texts/truyen-kieu-chars.json")
+    .then((r) => r.json())
+    .then((data) => Session.set("queue.truyenKieu", data.characters))
+    .catch((error) => console.error("failed to load truyen-kieu queue", error));
+};
+
+const nextInTruyenKieuQueue = () => {
+  const queue = Session.get("queue.truyenKieu");
+  if (!queue || queue.length === 0) {
+    console.warn("truyen-kieu queue not loaded yet");
+    return;
+  }
+  const current = Session.get("editor.glyph");
+  const currentCharacter = current ? current.character : undefined;
+  Meteor.call(
+    "getNextUnverifiedGlyphInList",
+    queue,
+    currentCharacter,
+    (error, data) => {
+      assert(!error, error);
+      if (!data) {
+        console.log("truyen-kieu queue: all characters verified");
+        return;
+      }
+      Session.set("editor.glyph", data);
+      window.location.hash = encodeURIComponent(data.character);
+    },
+  );
+};
 
 const stages = {
   analysis: AnalysisStage,
@@ -122,6 +154,7 @@ const bindings = {
   e: () => changeGlyph("getNextVerifiedGlyph"),
   r: resetStage,
   s: () => incrementStage(1),
+  t: nextInTruyenKieuQueue,
   w: () => incrementStage(-1),
   // ctrl + click adds a point onto the nearset spline
 };
@@ -205,4 +238,5 @@ Meteor.startup(() => {
   // });
   $(window).on("hashchange", loadCharacter);
   cjklib.promise.then(loadCharacter).catch(console.error.bind(console));
+  loadTruyenKieuQueue();
 });

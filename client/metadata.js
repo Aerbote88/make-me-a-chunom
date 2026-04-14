@@ -91,6 +91,14 @@ Template.metadata.helpers({
     const glyph = Session.get("editor.glyph");
     return (glyph && glyph.metadata.frequency) || "?";
   },
+  truyenKieuPosition() {
+    const glyph = Session.get("editor.glyph");
+    const queue = Session.get("queue.truyenKieu");
+    if (!glyph || !queue) return null;
+    const index = queue.indexOf(glyph.character);
+    if (index < 0) return null;
+    return `${index + 1} / ${queue.length}`;
+  },
   references() {
     const glyph = Session.get("editor.glyph");
     if (!glyph) return;
@@ -111,6 +119,12 @@ Template.metadata.helpers({
       {
         href: `https://en.wiktionary.org/wiki/${character}`,
         label: "Wiktionary",
+      },
+      {
+        href:
+          "http://nomfoundation.org/nom-tools/Nom-Lookup-Tool/Nom-Lookup-Tool" +
+          `?uiLang=en&q=${character}`,
+        label: "Nom Foundation",
       },
       {
         href:
