@@ -46,7 +46,12 @@
       "Bash(xargs grep:*)",
       "Bash(grep -r \"SourceText\\\\|sourcetext\" /c/Users/alber/OneDrive/Desktop/Coding/Nomflow/backend/*.py)",
       "Bash(grep -r \"line_number\\\\|quoc_ngu\\\\|nom_text\\\\|nom_char\" /c/Users/alber/OneDrive/Desktop/Coding/Nomflow/backend/*.py)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" \"https://aerbote88.github.io/make-me-a-chunom/stroke-data/index.json\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" \"https://aerbote88.github.io/make-me-a-chunom/stroke-data/4E00.json\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" \"https://aerbote88.github.io/make-me-a-chunom/\")",
+      "Bash(curl -s \"https://api.github.com/repos/Aerbote88/make-me-a-chunom/pages\")",
+      "Bash(curl -s \"https://api.github.com/repos/Aerbote88/make-me-a-chunom/actions/runs?per_page=3\")"
     ]
   }
 }
