@@ -73,6 +73,7 @@
         <code>r</code> reset stage<br />
         <code>s</code> previous stage<br />
         <code>t</code> next unverified in Truyện Kiều<br />
+        <code>T</code> previous in Truyện Kiều<br />
         <code>w</code> next stage<br />
         <code>C-click</code> create a point<br />
         <code>1</code>-<code>9</code> open reference<br />
@@ -88,16 +89,6 @@
           stroke="{{stroke}}"
           d="{{d}}"
         ></path>
-        {{/each}} {{#each lines}}
-        <line
-          class="{{cls}}"
-          stroke="{{stroke}}"
-          stroke-width="8"
-          x1="{{x1}}"
-          y1="{{y1}}"
-          x2="{{x2}}"
-          y2="{{y2}}"
-        ></line>
         {{/each}} {{#each points}}
         <circle
           class="{{cls}}"
@@ -107,6 +98,16 @@
           cy="{{cy}}"
           r="8"
         ></circle>
+        {{/each}} {{#each lines}}
+        <line
+          class="{{cls}}"
+          stroke="{{stroke}}"
+          stroke-width="14"
+          x1="{{x1}}"
+          y1="{{y1}}"
+          x2="{{x2}}"
+          y2="{{y2}}"
+        ></line>
         {{/each}} {{#each animations}}
         <clipPath id="{{clip}}">
           <path d="{{stroke}}"></path>

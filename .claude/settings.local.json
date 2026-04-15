@@ -51,7 +51,20 @@
       "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" \"https://aerbote88.github.io/make-me-a-chunom/stroke-data/4E00.json\")",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" \"https://aerbote88.github.io/make-me-a-chunom/\")",
       "Bash(curl -s \"https://api.github.com/repos/Aerbote88/make-me-a-chunom/pages\")",
-      "Bash(curl -s \"https://api.github.com/repos/Aerbote88/make-me-a-chunom/actions/runs?per_page=3\")"
+      "Bash(curl -s \"https://api.github.com/repos/Aerbote88/make-me-a-chunom/actions/runs?per_page=3\")",
+      "Bash(curl -s -o /dev/null -w \"root: %{http_code}\\\\n\" \"https://aerbote88.github.io/make-me-a-chunom/\")",
+      "Bash(curl -s -o /dev/null -w \"index: %{http_code}\\\\n\" \"https://aerbote88.github.io/make-me-a-chunom/stroke-data/index.json\")",
+      "Bash(curl -s -o /dev/null -w \"4E00: %{http_code}\\\\n\" \"https://aerbote88.github.io/make-me-a-chunom/stroke-data/4E00.json\")",
+      "Bash(curl -s \"https://api.github.com/repos/Aerbote88/make-me-a-chunom\")",
+      "Bash(curl -s \"https://api.github.com/repos/Aerbote88/make-me-a-chunom/actions/runs?per_page=5\")",
+      "Bash(ls:*)",
+      "Bash(npx --yes http-server public -p 8080 --cors -c-1)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" \"http://localhost:8080/stroke-data/index.json\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" \"http://localhost:8080/stroke-data/4E00.json\")",
+      "Bash(curl -s -I \"http://localhost:8080/stroke-data/index.json\")",
+      "Bash(curl -s -o /dev/null -w \"local: %{http_code}\\\\n\" \"http://localhost:8080/stroke-data/24F83.json\")",
+      "Bash(curl -s -o /dev/null -w \"local: %{http_code}\\\\n\" \"http://localhost:8080/stroke-data/24F93.json\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" \"http://localhost:8080/stroke-data/24F93.json\")"
     ]
   }
 }

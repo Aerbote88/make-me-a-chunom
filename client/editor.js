@@ -19,6 +19,19 @@ const loadTruyenKieuQueue = () => {
     .catch((error) => console.error("failed to load truyen-kieu queue", error));
 };
 
+const previousInTruyenKieuQueue = () => {
+  const queue = Session.get("queue.truyenKieu");
+  if (!queue || queue.length === 0) {
+    console.warn("truyen-kieu queue not loaded yet");
+    return;
+  }
+  const current = Session.get("editor.glyph");
+  const currentCharacter = current ? current.character : undefined;
+  const currentIndex = currentCharacter ? queue.indexOf(currentCharacter) : -1;
+  const previousIndex = currentIndex <= 0 ? queue.length - 1 : currentIndex - 1;
+  changeGlyph("getGlyph", queue[previousIndex]);
+};
+
 const nextInTruyenKieuQueue = () => {
   const queue = Session.get("queue.truyenKieu");
   if (!queue || queue.length === 0) {
@@ -155,6 +168,7 @@ const bindings = {
   r: resetStage,
   s: () => incrementStage(1),
   t: nextInTruyenKieuQueue,
+  T: previousInTruyenKieuQueue,
   w: () => incrementStage(-1),
   // ctrl + click adds a point onto the nearset spline
 };
