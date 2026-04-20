@@ -24,6 +24,15 @@ class VerifiedStage extends AbstractStage {
     if (Session.get('stages.verified.speed') === undefined) {
       Session.set('stages.verified.speed', kDefaultSpeed);
     }
+    // Force the {{#if showAnimation}} block to unmount and remount so the
+    // CSS keyframes restart from the beginning. Without this, navigating
+    // to a new character via the browser panel can leave the animation
+    // frozen mid-way, because Blaze keeps the same <style> element and
+    // just swaps its text — which does NOT restart animations in-flight.
+    Session.set('stages.verified.showAnimation', false);
+    Tracker.afterFlush(() => {
+      Session.set('stages.verified.showAnimation', true);
+    });
   }
 }
 
