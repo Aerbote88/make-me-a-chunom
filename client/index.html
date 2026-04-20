@@ -2,8 +2,42 @@
   <title>Hanzi decomposition</title>
 </head>
 <body>
-  {{> navbar}} {{> modal}} {{> editor}}
+  {{> navbar}} {{> modal}} {{> editor}} {{> char_browser}}
 </body>
+
+<template name="char_browser">
+  <div id="char-browser" class="{{stateClass}}">
+    <div class="cb-header">
+      <span class="cb-title">Nôm characters ({{filteredCount}} / {{totalCount}})</span>
+      <a class="cb-refresh" title="Reload from database">⟳</a>
+      <a class="cb-toggle">{{toggleLabel}}</a>
+    </div>
+    {{#unless collapsed}}
+      <div class="cb-controls">
+        <input type="text" class="cb-search" placeholder="char or U+XXXX" value="{{search}}">
+        <select class="cb-filter">
+          <option {{selected filter "all"}}>All</option>
+          <option {{selected filter "nom"}}>Nôm only</option>
+          <option {{selected filter "components"}}>Components only</option>
+          <option {{selected filter "issues"}}>Partial medians</option>
+          <option {{selected filter "incomplete"}}>Incomplete</option>
+        </select>
+      </div>
+      <div class="cb-list">
+        {{#each entries}}
+          <a class="cb-item {{statusClass}}"
+             data-char="{{character}}"
+             title="{{codepointLabel}} · {{strokeCount}} strokes{{#if hasPartialMedians}} · partial medians{{/if}}{{#unless hasCompleteOrder}} · no order{{/unless}}{{#if componentOnly}} · component only{{/if}}">
+            {{character}}
+          </a>
+        {{/each}}
+        {{#unless entries.length}}
+          <div class="cb-empty">No matches.</div>
+        {{/unless}}
+      </div>
+    {{/unless}}
+  </div>
+</template>
 
 <template name="navbar">
   <div id="navbar" class="navbar navbar-default navbar-static-top">
@@ -71,10 +105,10 @@
         <code>D</code> get next unverified glyph<br />
         <code>e</code> get next verified glyph<br />
         <code>r</code> reset stage<br />
-        <code>s</code> previous stage<br />
+        <code>s</code> next stage<br />
         <code>t</code> next unverified in Truyện Kiều<br />
         <code>T</code> previous in Truyện Kiều<br />
-        <code>w</code> next stage<br />
+        <code>w</code> previous stage<br />
         <code>C-click</code> create a point<br />
         <code>1</code>-<code>9</code> open reference<br />
         <code>B</code> toggles this popup<br />
@@ -142,6 +176,12 @@
       {{{editable field value}}}{{separator}}{{{extra}}}
     </div>
     {{/each}}
+    <div class="field">
+      <label class="control-label">
+        <input type="checkbox" class="component-only-toggle" {{componentOnlyAttr}}>
+        Component only (skip in Nôm export)
+      </label>
+    </div>
     <div class="field">
       <label class="control-label">References:</label>
       {{#each references}}

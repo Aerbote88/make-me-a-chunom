@@ -25,6 +25,13 @@ const validators = {
 
 // We avoid arrow functions in this map so that this is bound to the template.
 Template.metadata.events({
+  "change .component-only-toggle": function (event) {
+    const glyph = Session.get("editor.glyph");
+    if (!glyph) return;
+    glyph.metadata = glyph.metadata || {};
+    glyph.metadata.componentOnly = event.target.checked ? true : null;
+    Session.set("editor.glyph", glyph);
+  },
   "blur .value": function (event) {
     const text = $(event.target).text();
     let value = text && text !== unknown ? text : null;
@@ -91,6 +98,12 @@ Template.metadata.helpers({
     const glyph = Session.get("editor.glyph");
     return (glyph && glyph.metadata.frequency) || "?";
   },
+  componentOnlyAttr() {
+    const glyph = Session.get("editor.glyph");
+    return glyph && glyph.metadata && glyph.metadata.componentOnly
+      ? { checked: "checked" }
+      : {};
+  },
   truyenKieuPosition() {
     const glyph = Session.get("editor.glyph");
     const queue = Session.get("queue.truyenKieu");
@@ -121,16 +134,14 @@ Template.metadata.helpers({
         label: "Wiktionary",
       },
       {
-        href:
-          "http://nomfoundation.org/nom-tools/Nom-Lookup-Tool/Nom-Lookup-Tool" +
-          `?uiLang=en&q=${character}`,
-        label: "Nom Foundation",
+        href: `https://hannom.nvnv.app/en/search?q=${encodeURIComponent(character)}`,
+        label: "Hán Nôm NVNV",
       },
       {
         href:
-          "http://www.yellowbridge.com/chinese/character-etymology.php" +
-          `?zi=${character}`,
-        label: "YellowBridge",
+          "https://www.digitizingvietnam.com/en/tools/han-nom-dictionaries/general" +
+          `?q=${encodeURIComponent(character)}`,
+        label: "DVN",
       },
     ];
   },

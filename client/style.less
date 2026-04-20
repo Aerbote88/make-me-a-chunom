@@ -1,3 +1,179 @@
+// Nôm font stack. These TTFs ship with the app (public/nom-fonts/) and
+// between them cover Han + CJK Ext A–H + SPUA Nôm assignments used by
+// the digital Nôm community.
+@font-face {
+    font-family: "NomNaTong";
+    src: url("/nom-fonts/NomNaTong-Regular.ttf") format("truetype");
+    font-display: swap;
+}
+@font-face {
+    font-family: "BabelStoneHan";
+    src: url("/nom-fonts/BabelStoneHan.ttf") format("truetype");
+    font-display: swap;
+}
+@font-face {
+    font-family: "Plangothic";
+    src: url("/nom-fonts/PlangothicP1-Regular.ttf") format("truetype");
+    unicode-range: U+0000-1FFFF;
+    font-display: swap;
+}
+@font-face {
+    font-family: "Plangothic";
+    src: url("/nom-fonts/PlangothicP2-Regular.ttf") format("truetype");
+    unicode-range: U+20000-3FFFF;
+    font-display: swap;
+}
+
+// Apply the Nôm font stack globally so SPUA characters (e.g. 󰞺) render
+// instead of showing as tofu anywhere in the UI. Uses !important because
+// Bootstrap's body / panel / control rules otherwise override it.
+html,
+body,
+input,
+textarea,
+select,
+button,
+.panel,
+.panel-title,
+.navbar,
+#editor,
+#editor *,
+#char-browser,
+#char-browser * {
+    font-family: "NomNaTong", "BabelStoneHan", "Plangothic",
+                 "Noto Sans CJK SC", "Source Han Sans",
+                 -apple-system, "Segoe UI", sans-serif !important;
+}
+
+// Character browser — fixed top-right overlay.
+#char-browser {
+    position: fixed;
+    top: 76px;
+    right: 16px;
+    width: 340px;
+    max-height: calc(100vh - 96px);
+    background: white;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    font-family: -apple-system, "Segoe UI", sans-serif;
+    font-size: 13px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    z-index: 1000;
+
+    &.collapsed {
+        max-height: 36px;
+    }
+
+    .cb-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 10px;
+        background: #f1f5f9;
+        border-bottom: 1px solid #e2e8f0;
+        border-radius: 6px 6px 0 0;
+        font-weight: 500;
+
+        .cb-title { flex: 1; }
+
+        .cb-refresh,
+        .cb-toggle {
+            cursor: pointer;
+            color: #2563eb;
+            user-select: none;
+            padding: 0 4px;
+
+            &:hover { color: #1d4ed8; }
+        }
+    }
+
+    .cb-controls {
+        display: flex;
+        gap: 6px;
+        padding: 8px 10px;
+        border-bottom: 1px solid #e2e8f0;
+
+        .cb-search {
+            flex: 1;
+            padding: 4px 8px;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            font-size: 13px;
+
+            &:focus {
+                outline: none;
+                border-color: #2563eb;
+            }
+        }
+
+        .cb-filter {
+            padding: 4px 6px;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            font-size: 13px;
+            background: white;
+        }
+    }
+
+    .cb-list {
+        flex: 1;
+        overflow-y: auto;
+        padding: 8px 10px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+
+        .cb-item {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            text-decoration: none;
+            color: inherit;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            font-family: "Noto Sans CJK", "Source Han Sans", sans-serif;
+            cursor: pointer;
+
+            &:hover {
+                background: #dbeafe;
+                border-color: #2563eb;
+                color: inherit;
+                text-decoration: none;
+            }
+
+            &.issues { background: #fef3c7; border-color: #f59e0b; }
+            &.issues:hover { background: #fde68a; }
+
+            &.incomplete { background: #fee2e2; border-color: #ef4444; }
+            &.incomplete:hover { background: #fecaca; }
+
+            &.done { /* default styling */ }
+
+            // Component-only tiles: dashed border + muted so they're
+            // visually distinct from real Nôm characters.
+            &.component {
+                border-style: dashed;
+                color: #64748b;
+                opacity: 0.8;
+            }
+        }
+
+        .cb-empty {
+            width: 100%;
+            text-align: center;
+            color: #94a3b8;
+            padding: 20px;
+        }
+    }
+}
+
 // Bootstrap style overrides.
 .panel-title {
     font-size: 16px;
@@ -205,6 +381,66 @@ div.value[contenteditable="true"] {
             margin: 0 4px 0 0;
         }
 
+        .tree {
+            .assign-etym {
+                cursor: pointer;
+                color: #2563eb;
+                font-size: 11px;
+                margin-left: 8px;
+                padding: 1px 6px;
+                border: 1px solid #cbd5e1;
+                border-radius: 3px;
+                background: #f8fafc;
+                white-space: nowrap;
+
+                &:hover {
+                    background: #dbeafe;
+                    border-color: #2563eb;
+                    text-decoration: none;
+                }
+            }
+        }
+
+        .digitizing-vietnam {
+            margin: 18px 0;
+            padding: 10px 12px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+
+            a {
+                color: #2563eb;
+                text-decoration: none;
+                margin-right: 12px;
+
+                &:hover { text-decoration: underline; }
+            }
+
+            .btn {
+                margin-right: 8px;
+            }
+
+            .hints {
+                display: block;
+                margin-top: 8px;
+                font-size: 14px;
+                color: #475569;
+
+                .hint {
+                    display: inline-block;
+                    margin: 0 4px;
+                    padding: 2px 8px;
+                    background: #e0e7ff;
+                    border: 1px solid #6366f1;
+                    border-radius: 3px;
+                    cursor: pointer;
+                    font-family: monospace;
+
+                    &:hover { background: #c7d2fe; }
+                }
+            }
+        }
+
         .decomposition,
         .radical,
         .etymology {
@@ -245,6 +481,19 @@ div.value[contenteditable="true"] {
             left: 818px;
             right: 16px;
             top: 8px;
+
+            // Median-overlay styling — makes the polyline and waypoints
+            // visible when a stroke is being edited or hovered in the
+            // permutation list.
+            line {
+                stroke: #ef4444;
+                stroke-width: 16;
+                stroke-linecap: round;
+            }
+
+            circle {
+                stroke-width: 4;
+            }
         }
 
         .component {
@@ -268,8 +517,36 @@ div.value[contenteditable="true"] {
             }
         }
 
+        .median-edit-bar {
+            background: #fff7ed;
+            border: 1px solid #fb923c;
+            border-radius: 4px;
+            padding: 8px 12px;
+            margin-bottom: 8px;
+
+            button {
+                margin-left: 6px;
+                padding: 4px 10px;
+                border: 1px solid #94a3b8;
+                background: white;
+                border-radius: 3px;
+                cursor: pointer;
+
+                &:hover { background: #f1f5f9; }
+                &.save-median { background: #2563eb; color: white; border-color: #2563eb; }
+                &.save-median:hover { background: #1d4ed8; }
+                &.save-median:disabled { background: #cbd5e1; border-color: #cbd5e1; cursor: not-allowed; }
+                &.cancel-median:hover { background: #fee2e2; }
+            }
+        }
+
         .permutation {
             margin: 8px 0;
+
+            .entry.partial {
+                background: #fef3c7 !important;
+                border-left: 4px solid #f59e0b !important;
+            }
 
             .entry {
                 border: 1px dotted gray;
@@ -289,6 +566,12 @@ div.value[contenteditable="true"] {
 
                 .reverse {
                     float: right;
+                }
+
+                .edit-median {
+                    float: right;
+                    margin-right: 8px;
+                    color: #2563eb;
                 }
 
                 .small svg {
@@ -324,6 +607,30 @@ div.value[contenteditable="true"] {
 
             left: 680px;
             top: 0;
+        }
+
+        .animation-speed {
+            margin-top: 12px;
+            padding: 8px 12px;
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+
+            label {
+                display: block;
+                font-weight: normal;
+                margin: 0 0 4px;
+            }
+
+            .value {
+                font-weight: bold;
+                margin-left: 4px;
+            }
+
+            .speed-slider {
+                display: block;
+                width: 220px;
+            }
         }
     }
 }

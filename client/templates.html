@@ -38,6 +38,19 @@
     {{{editable "radical" radical}}}
   </div>
   {{> etymology etymology_data}}
+  <div class="digitizing-vietnam">
+    <button class="btn btn-default fetch-decomposition" type="button">
+      Fetch decomposition hint from DVN
+    </button>
+    {{#if hints.length}}
+      <span class="hints">
+        Candidates:
+        {{#each hints}}
+          <a class="hint" data-hint="{{this}}">{{this}}</a>
+        {{/each}}
+      </span>
+    {{/if}}
+  </div>
 </template>
 
 <template name="tree">
@@ -52,6 +65,10 @@
         (unknown)
       {{else}}
         <a class="link" href="#{{value}}">{{details value}}</a>
+        <a class="assign-etym" data-role="semantic" data-value="{{value}}"
+           title="Use {{value}} as the meaning provider">→ meaning</a>
+        <a class="assign-etym" data-role="phonetic" data-value="{{value}}"
+           title="Use {{value}} as the pronunciation provider">→ sound</a>
       {{/if}}
     {{/if}}
     {{#if (equals type "compound")}}
@@ -88,8 +105,20 @@
 </template>
 
 <template name="order_stage">
-  Click on the strokes to the right to set the component they belong to.
-  Then reorder the strokes by clicking and dragging elements in the list below.
+  {{#if editingMedian}}
+    <div class="median-edit-bar">
+      <strong>Editing median for stroke {{editingStrokeIndex}}</strong> —
+      click on the highlighted (yellow) stroke to add waypoints.
+      {{draftCount}} point{{#unless oneDraftPoint}}s{{/unless}} placed.
+      <button class="save-median" {{saveButtonAttrs}}>Save</button>
+      <button class="undo-median">Undo</button>
+      <button class="clear-median">Clear</button>
+      <button class="cancel-median">Cancel</button>
+    </div>
+  {{else}}
+    Click on the strokes to the right to set the component they belong to.
+    Then reorder the strokes by clicking and dragging elements in the list below.
+  {{/if}}
   {{#each components}}
     <div class="component" style="top: {{top}};">
       {{> glyph glyph}}
@@ -101,9 +130,10 @@
   </div>
   <div class="permutation sortable-list">
     {{#each items}}
-      <div class="entry" data-index="{{index}}" style="background-color: {{background}};
+      <div class="entry {{#if isPartial}}partial{{/if}}" data-index="{{index}}" style="background-color: {{background}};
                                 border-color: {{color}};">
         <a class="reverse">Reverse</a>
+        <a class="edit-median">Edit median{{#if isPartial}} ⚠{{/if}}</a>
         <div class="small">{{> glyph glyph}}</div>
         <div class="clear"></div>
         <div class="character">{{> glyph glyph}}</div>
@@ -128,10 +158,22 @@
       {{#each lines}}
         <line x1="{{x1}}" y1="{{y1}}" x2="{{x2}}" y2="{{y2}}"></line>
       {{/each}}
+      {{#each points}}
+        <circle cx="{{cx}}" cy="{{cy}}" r="{{r}}" fill="{{fill}}" stroke="{{stroke}}"></circle>
+      {{/each}}
     </g>
   </svg>
 </template>
 
 <template name="verified_stage">
-  {{> animation data}}
+  {{#if showAnimation}}
+    {{> animation data}}
+  {{/if}}
+  <div class="animation-speed">
+    <label>
+      Animation speed: <span class="value">{{speedLabel}}</span>
+    </label>
+    <input type="range" class="speed-slider"
+           min="0.25" max="3" step="0.25" value="{{speed}}">
+  </div>
 </template>

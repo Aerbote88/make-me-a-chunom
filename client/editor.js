@@ -11,12 +11,42 @@ import _ from "lodash";
 
 Session.set("editor.glyph", undefined);
 Session.set("queue.truyenKieu", undefined);
+Session.set("queue.nom", undefined);
 
 const loadTruyenKieuQueue = () => {
   fetch("/texts/truyen-kieu-chars.json")
     .then((r) => r.json())
     .then((data) => Session.set("queue.truyenKieu", data.characters))
     .catch((error) => console.error("failed to load truyen-kieu queue", error));
+};
+
+const loadNomQueue = () => {
+  Meteor.call("getUserAddedNomList", (error, data) => {
+    if (error) {
+      console.error("failed to load nom queue", error);
+      return;
+    }
+    Session.set("queue.nom", data || []);
+    console.log(`nom queue: ${(data || []).length} user-added characters`);
+  });
+};
+
+const stepNomQueue = (direction) => {
+  const queue = Session.get("queue.nom");
+  if (!queue || queue.length === 0) {
+    console.warn("nom queue not loaded yet (or empty)");
+    return;
+  }
+  const current = Session.get("editor.glyph");
+  const currentCharacter = current ? current.character : undefined;
+  const currentIndex = currentCharacter ? queue.indexOf(currentCharacter) : -1;
+  let nextIndex;
+  if (direction > 0) {
+    nextIndex = currentIndex < 0 ? 0 : (currentIndex + 1) % queue.length;
+  } else {
+    nextIndex = currentIndex <= 0 ? queue.length - 1 : currentIndex - 1;
+  }
+  changeGlyph("getGlyph", queue[nextIndex]);
 };
 
 const previousInTruyenKieuQueue = () => {
@@ -165,6 +195,8 @@ const bindings = {
   d: () => changeGlyph("getNextGlyph"),
   D: () => changeGlyph("getNextUnverifiedGlyph"),
   e: () => changeGlyph("getNextVerifiedGlyph"),
+  n: () => stepNomQueue(1),
+  N: () => stepNomQueue(-1),
   r: resetStage,
   s: () => incrementStage(1),
   t: nextInTruyenKieuQueue,
@@ -176,6 +208,7 @@ const bindings = {
 // We avoid arrow functions in this map so that this is bound to the template.
 Template.editor.events({
   "click svg .selectable": function (event) {
+    if (stage && stage.isEditingMedian && stage.isEditingMedian()) return;
     stage.handleEvent(event, this);
     stage.forceRefresh();
   },
@@ -192,6 +225,18 @@ Template.editor.events({
   "click svg": function (e) {
     if (stage.type === types[1] && e.ctrlKey) {
       stage.createPoint(e);
+      return;
+    }
+    if (stage && stage.isEditingMedian && stage.isEditingMedian()) {
+      const svg = e.currentTarget;
+      const pt = svg.createSVGPoint();
+      pt.x = e.clientX;
+      pt.y = e.clientY;
+      const p = pt.matrixTransform(svg.getScreenCTM().inverse());
+      // The inner <g> has transform="scale(1,-1) translate(0,-900)".
+      // Applied right-to-left: (u, v) → translate → (u, v-900) → scale → (u, 900-v).
+      // So invert: userX = p.x, userY = 900 - p.y.
+      stage.onMedianClick(p.x, 900 - p.y);
     }
   },
 });
@@ -223,6 +268,7 @@ Tracker.autorun(() => {
   } else {
     Meteor.call("saveGlyph", glyph, (error, data) => {
       if (error) console.error(error);
+      else Session.set("browser.savedAt", Date.now());
     });
     if (!_.isEqual(glyph.metadata, last_glyph.metadata)) {
       stage.refreshUI(glyph.character, glyph.metadata);
@@ -253,4 +299,5 @@ Meteor.startup(() => {
   $(window).on("hashchange", loadCharacter);
   cjklib.promise.then(loadCharacter).catch(console.error.bind(console));
   loadTruyenKieuQueue();
+  loadNomQueue();
 });

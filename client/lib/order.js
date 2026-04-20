@@ -1,6 +1,11 @@
 import _ from 'lodash';
 import {AbstractStage} from '/client/lib/abstract';
 import {assert, Point} from '/lib/base';
+import {
+  augmentTreeWithBoundsData,
+  collectComponentNodes,
+  getAffineTransform,
+} from '/lib/decomposition_bounds';
 import {decomposition_util} from '/lib/decomposition_util';
 import {Glyphs} from '/lib/glyphs';
 import {Hungarian} from '/lib/hungarian';
@@ -9,42 +14,6 @@ import {median_util} from '/lib/median_util';
 let stage = undefined;
 
 const Order = new Mongo.Collection('order')._collection;
-
-// TODO(skishore): Consider using sqrt(1/2) in place of 1/2 here. This constant
-// is used to compute bounds for components that are surrounded.
-const rad2 = 1/2;
-const compound_bounds = {
-  '⿰': [[[0, 0], [1/2, 1]], [[1/2, 0], [1/2, 1]]],
-  '⿱': [[[0, 0], [1, 1/2]], [[0, 1/2], [1, 1/2]]],
-  '⿴': [[[0, 0], [1, 1]], [[(1 - rad2)/2, (1 - rad2)/2], [rad2, rad2]]],
-  '⿵': [[[0, 0], [1, 1]], [[(1 - rad2)/2, 1 - rad2], [rad2, rad2]]],
-  '⿶': [[[0, 0], [1, 1]], [[(1 - rad2)/2, 0], [rad2, rad2]]],
-  '⿷': [[[0, 0], [1, 1]], [[1 - rad2, (1 - rad2)/2], [rad2, rad2]]],
-  '⿸': [[[0, 0], [1, 1 - rad2]], [[1 - rad2, 1 - rad2], [rad2, rad2]]],
-  '⿹': [[[0, 0], [1, 1]], [[0, 1 - rad2], [rad2, rad2]]],
-  '⿺': [[[0, 0], [1, 1]], [[1 - rad2, 0], [rad2, rad2]]],
-  '⿻': [[[0, 0], [1, 1]], [[0, 0], [1, 1]]],
-  '⿳': [[[0, 0], [1, 1/3]], [[0, 1/3], [1, 1/3]], [[0, 2/3], [1, 1/3]]],
-  '⿲': [[[0, 0], [1/3, 1]], [[1/3, 0], [1/3, 1]], [[2/3, 0], [1/3, 1]]],
-}
-
-const augmentTreeWithBoundsData = (tree, bounds) => {
-  tree.bounds = bounds;
-  if (tree.type === 'compound') {
-    const diff = Point.subtract(bounds[1], bounds[0]);
-    const targets = compound_bounds[tree.value];
-    assert(targets && targets.length === tree.children.length);
-    for (let i = 0; i < targets.length; i++) {
-      const target = [targets[i][0], Point.add(targets[i][0], targets[i][1])];
-      const child_bounds = target.map(
-          (x) => [x[0]*diff[0] + bounds[0][0], x[1]*diff[1] + bounds[0][1]]);
-      augmentTreeWithBoundsData(tree.children[i], child_bounds);
-    }
-  } else {
-    assert(!tree.children);
-  }
-  return tree;
-}
 
 const buildStrokeOrder = (tree, log) => {
   if (tree.type === 'character') {
@@ -82,25 +51,6 @@ const buildStrokeOrder = (tree, log) => {
   const result = [];
   parts.map((x) => x.map((y) => result.push(y)));
   return result;
-}
-
-const collectComponentNodes = (tree, result) => {
-  result = result || [];
-  if (tree.type === 'character' && tree.value !== '?') {
-    result.push(tree);
-  }
-  for (let child of tree.children || []) {
-    collectComponentNodes(child, result);
-  }
-  return result;
-}
-
-const getAffineTransform = (source, target) => {
-  const sdiff = Point.subtract(source[1], source[0]);
-  const tdiff = Point.subtract(target[1], target[0]);
-  const ratio = [tdiff[0]/sdiff[0], tdiff[1]/sdiff[1]];
-  return (point) => [ratio[0]*(point[0] - source[0][0]) + target[0][0],
-                     ratio[1]*(point[1] - source[0][1]) + target[0][1]];
 }
 
 const matchStrokes = (character, components) => {
@@ -184,7 +134,54 @@ class OrderStage extends AbstractStage {
       this.paths.push(x.path);
     });
 
+    // Median-edit sub-mode. When a stroke is being edited, its median is
+    // being replaced by draft waypoints authored via clicks on the glyph
+    // canvas. Saving commits the draft into this.adjusted[N].median.
+    this.editingStrokeIndex = null;
+    this.draftMedian = null;
+
     stage = this;
+  }
+  isEditingMedian() {
+    return this.editingStrokeIndex !== null;
+  }
+  onStartEditMedian(strokeIndex) {
+    this.editingStrokeIndex = strokeIndex;
+    this.draftMedian = [];
+    const current = this.adjusted.find((x) => x.stroke === strokeIndex);
+    if (current && Array.isArray(current.median)) {
+      this.draftMedian = current.median.map((p) => [p[0], p[1]]);
+    }
+    this.forceRefresh();
+  }
+  onMedianClick(x, y) {
+    if (!this.isEditingMedian()) return;
+    this.draftMedian.push([Math.round(x), Math.round(y)]);
+    this.forceRefresh();
+  }
+  onUndoMedianPoint() {
+    if (!this.isEditingMedian() || !this.draftMedian.length) return;
+    this.draftMedian.pop();
+    this.forceRefresh();
+  }
+  onClearMedian() {
+    if (!this.isEditingMedian()) return;
+    this.draftMedian = [];
+    this.forceRefresh();
+  }
+  onSaveMedian() {
+    if (!this.isEditingMedian()) return;
+    if (this.draftMedian.length < 2) return;
+    const target = this.adjusted.find((x) => x.stroke === this.editingStrokeIndex);
+    if (target) target.median = this.draftMedian.map((p) => [p[0], p[1]]);
+    this.editingStrokeIndex = null;
+    this.draftMedian = null;
+    this.forceRefresh();
+  }
+  onCancelEditMedian() {
+    this.editingStrokeIndex = null;
+    this.draftMedian = null;
+    this.forceRefresh();
   }
   handleEvent(event, template) {
     const element = this.adjusted.filter(
@@ -229,14 +226,44 @@ class OrderStage extends AbstractStage {
     this.forceRefresh();
   }
   refreshUI() {
-    Session.set('stage.status', this.adjusted ? [] : [{
+    let status = this.adjusted ? [] : [{
       cls: 'error',
       message: 'Loading component data...',
-    }]);
+    }];
+    if (this.isEditingMedian()) {
+      const n = (this.draftMedian || []).length;
+      status = [{
+        cls: 'info',
+        message: `Editing median for stroke ${this.editingStrokeIndex} — click along the stroke to place waypoints (${n} placed; need ≥ 2).`,
+      }];
+    }
+    Session.set('stage.status', status);
     Session.set('stages.order.colors', this.colors);
     Session.set('stages.order.components', this.components);
     Session.set('stages.order.indices', this.indices);
     Session.set('stages.order.order', this.adjusted);
+    Session.set('stages.order.editingStrokeIndex', this.editingStrokeIndex);
+    Session.set('stages.order.draftMedian',
+        this.draftMedian ? this.draftMedian.map((p) => [p[0], p[1]]) : null);
+    // Flag entries whose median covers noticeably less than its stroke's
+    // bounding box — surfaces "partial median" cases in the permutation
+    // list so they're easy to spot.
+    const parsePts = (d) => {
+      const nums = (d.match(/-?\d+(?:\.\d+)?/g) || []).map(Number);
+      const p = [];
+      for (let i = 0; i + 1 < nums.length; i += 2) p.push([nums[i], nums[i + 1]]);
+      return p;
+    };
+    const bbox = (pts) => {
+      if (!pts || pts.length < 2) return 0;
+      let a = Infinity, b = Infinity, c = -Infinity, d = -Infinity;
+      for (const [x, y] of pts) {
+        if (x < a) a = x; if (x > c) c = x;
+        if (y < b) b = y; if (y > d) d = y;
+      }
+      return Math.hypot(c - a, d - b);
+    };
+
     Order.remove({});
     (this.adjusted || []).map((x, i) => {
       const key = JSON.stringify(x.match || null);
@@ -254,12 +281,16 @@ class OrderStage extends AbstractStage {
         const c = parseInt(color.substr(1), 16);
         return `rgba(${c >> 16}, ${(c >> 8) & 0xFF}, ${c & 0xFF}, ${alpha})`;
       };
+      const strokeDiag = bbox(parsePts(this.strokes[x.stroke] || ''));
+      const medDiag = bbox(x.median);
+      const isPartial = strokeDiag > 0 && medDiag / strokeDiag < 0.5;
       Order.insert({
         background: lighten(color, 0.1),
         color: color,
         glyph: glyph,
         index: i,
         stroke_index: x.stroke,
+        isPartial,
       });
     });
   }
@@ -268,6 +299,33 @@ class OrderStage extends AbstractStage {
 Template.order_stage.events({
   'click .permutation .entry .reverse': function(event) {
     stage && stage.onReverseStroke(this.stroke_index);
+  },
+  'click .permutation .entry .edit-median': function(event) {
+    event.preventDefault();
+    Session.set('stages.order.hoverStrokeIndex', null);
+    stage && stage.onStartEditMedian(this.stroke_index);
+  },
+  'mouseenter .permutation .entry .edit-median': function(event) {
+    Session.set('stages.order.hoverStrokeIndex', this.stroke_index);
+  },
+  'mouseleave .permutation .entry .edit-median': function(event) {
+    Session.set('stages.order.hoverStrokeIndex', null);
+  },
+  'click .median-edit-bar .save-median': function(event) {
+    event.preventDefault();
+    stage && stage.onSaveMedian();
+  },
+  'click .median-edit-bar .undo-median': function(event) {
+    event.preventDefault();
+    stage && stage.onUndoMedianPoint();
+  },
+  'click .median-edit-bar .clear-median': function(event) {
+    event.preventDefault();
+    stage && stage.onClearMedian();
+  },
+  'click .median-edit-bar .cancel-median': function(event) {
+    event.preventDefault();
+    stage && stage.onCancelEditMedian();
   },
 });
 
@@ -294,19 +352,58 @@ Template.order_stage.helpers({
     const indices = Session.get('stages.order.indices');
     const order = Session.get('stages.order.order');
     const character = Session.get('editor.glyph');
-    const result = {paths: []};
+    const editingIdx = Session.get('stages.order.editingStrokeIndex');
+    const draft = Session.get('stages.order.draftMedian');
+    const hoverIdx = Session.get('stages.order.hoverStrokeIndex');
+    const result = {paths: [], lines: [], points: []};
     if (!colors || !indices || !order || !character) {
       return result;
     }
     for (let element of order) {
       const index = indices[JSON.stringify(element.match || null)];
       const color = colors[index % colors.length];
+      const isEditingThis = editingIdx === element.stroke;
+      const isHoveredThis = !isEditingThis && hoverIdx === element.stroke;
       result.paths.push({
-        cls: 'selectable',
+        cls: isEditingThis ? '' : 'selectable',
         d: character.stages.strokes.corrected[element.stroke],
-        fill: index < 0 ? 'lightgray' : color,
-        stroke: index < 0 ? 'lightgray' : 'black',
+        fill: isEditingThis
+          ? '#fef3c7'
+          : isHoveredThis
+            ? '#fed7aa'
+            : (index < 0 ? 'lightgray' : color),
+        stroke: isEditingThis
+          ? '#f59e0b'
+          : isHoveredThis
+            ? '#ea580c'
+            : (index < 0 ? 'lightgray' : 'black'),
         stroke_index: element.stroke,
+      });
+    }
+    // Choose which median to overlay: draft (while editing) or the stored
+    // median of the hovered stroke.
+    let overlay = null;
+    if (editingIdx !== undefined && editingIdx !== null && Array.isArray(draft)) {
+      overlay = draft;
+    } else if (hoverIdx !== undefined && hoverIdx !== null) {
+      const entry = order.find((e) => e && e.stroke === hoverIdx);
+      if (entry && Array.isArray(entry.median)) overlay = entry.median;
+    }
+    if (overlay) {
+      for (let i = 0; i + 1 < overlay.length; i++) {
+        result.lines.push({
+          x1: overlay[i][0], y1: overlay[i][1],
+          x2: overlay[i + 1][0], y2: overlay[i + 1][1],
+        });
+      }
+      overlay.forEach((p, i) => {
+        const isHead = i === 0;
+        const isTail = i === overlay.length - 1 && overlay.length > 1;
+        result.points.push({
+          cx: p[0], cy: p[1], r: 18,
+          fill: isHead ? '#16a34a' : isTail ? '#dc2626' : '#ef4444',
+          stroke: 'white',
+        });
       });
     }
     return result;
@@ -345,6 +442,18 @@ Template.order_stage.helpers({
         stage && stage.onSort(event.oldIndex, event.newIndex);
       },
     }
+  },
+  editingMedian: () => {
+    const idx = Session.get('stages.order.editingStrokeIndex');
+    return idx !== undefined && idx !== null;
+  },
+  editingStrokeIndex: () => Session.get('stages.order.editingStrokeIndex'),
+  draftCount: () => (Session.get('stages.order.draftMedian') || []).length,
+  oneDraftPoint: () => (Session.get('stages.order.draftMedian') || []).length === 1,
+  canSaveMedian: () => (Session.get('stages.order.draftMedian') || []).length >= 2,
+  saveButtonAttrs: () => {
+    const n = (Session.get('stages.order.draftMedian') || []).length;
+    return n >= 2 ? {} : {disabled: 'disabled'};
   },
 });
 

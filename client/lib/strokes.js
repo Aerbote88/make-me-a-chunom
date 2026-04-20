@@ -27,8 +27,11 @@ const getStrokePaths = (strokes, include, colors) => {
 class StrokesStage extends AbstractStage {
   constructor(glyph) {
     super('strokes');
-    const raw = stroke_extractor.getStrokes(
-        glyph.stages.path, glyph.stages.bridges).strokes;
+    // When a glyph was imported, stages.path is empty and there is nothing
+    // to extract — fall back to the stored strokes.
+    const raw = glyph.stages.path
+      ? stroke_extractor.getStrokes(glyph.stages.path, glyph.stages.bridges).strokes
+      : (glyph.stages.strokes ? glyph.stages.strokes.raw : []);
     this.include = {};
     this.original = {corrected: fixStrokes(raw), raw};
     this.original.corrected.map((x) => this.include[x] = true);

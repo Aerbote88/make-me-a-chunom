@@ -188,6 +188,38 @@ class AnalysisStage extends AbstractStage {
       radical: this.radical,
     };
   }
+  assignAsEtymologyRole(role, value) {
+    if (!value || value === "?") return;
+    if (role !== "semantic" && role !== "phonetic") return;
+    // Flip etymology to pictophonetic so the semantic/phonetic slots exist.
+    if (this.etymology.type !== "pictophonetic") {
+      this.etymology = { type: "pictophonetic", hint: this.etymology.hint || "?" };
+    }
+    this.etymology[role] = value;
+    // When swapping meaning/sound on the same char, default the other side
+    // to "?" rather than leave a stale value.
+    const other = role === "semantic" ? "phonetic" : "semantic";
+    if (!this.etymology[other]) this.etymology[other] = "?";
+    stage.forceRefresh();
+  }
+  applyDecomposition(decomposition) {
+    try {
+      this.tree = decomposition_util.convertDecompositionToTree(decomposition);
+    } catch (e) {
+      console.error("applyDecomposition failed", e);
+      Session.set("stage.status", [{
+        cls: "error",
+        message: `Could not parse candidate "${decomposition}": ${e.message}`,
+      }]);
+      return;
+    }
+    Session.set("stages.analysis.hints", []);
+    Session.set("stage.status", [{
+      cls: "success",
+      message: `Applied decomposition: ${decomposition}`,
+    }]);
+    this.forceRefresh();
+  }
   refreshUI() {
     const to_path = (x) => ({ d: x, fill: "gray", stroke: "gray" });
     Session.set("stage.paths", this.strokes.map(to_path));
@@ -247,6 +279,11 @@ Template.analysis_stage.events({
           collectComponents(stage.tree),
         ),
       );
+      // Ensure the three sub-fields are present so the pictophonetic UI
+      // row renders even when the guesser didn't fill anything in.
+      if (!stage.etymology.phonetic) stage.etymology.phonetic = "?";
+      if (!stage.etymology.semantic) stage.etymology.semantic = "?";
+      if (!stage.etymology.hint) stage.etymology.hint = "?";
     }
     stage.forceRefresh();
   },
@@ -255,6 +292,40 @@ Template.analysis_stage.events({
     const subtree = decomposition_util.getSubtree(stage.tree, this.path);
     setSubtreeType(subtree, type);
     stage.forceRefresh();
+  },
+  "click .fetch-decomposition": function (event) {
+    event.preventDefault();
+    const glyph = Session.get("editor.glyph");
+    if (!glyph) return;
+    Session.set("stage.status", [{ cls: "info", message: "Fetching from digitizingvietnam.com…" }]);
+    Meteor.call("fetchDecompositionHint", glyph.character, (err, hints) => {
+      if (err) {
+        Session.set("stage.status", [{ cls: "error", message: "Fetch failed: " + err.reason }]);
+        return;
+      }
+      if (!hints || hints.length === 0) {
+        Session.set("stages.analysis.hints", []);
+        Session.set("stage.status", [{ cls: "error", message: "No decomposition hints found on digitizingvietnam.com." }]);
+        return;
+      }
+      Session.set("stages.analysis.hints", hints);
+      Session.set("stage.status", [{
+        cls: "info",
+        message: `Got ${hints.length} candidate${hints.length === 1 ? "" : "s"} — click one below to apply.`,
+      }]);
+    });
+  },
+  "click .hint": function (event) {
+    event.preventDefault();
+    const hint = event.currentTarget.getAttribute("data-hint");
+    console.log("applying decomposition hint:", hint);
+    if (stage && hint) stage.applyDecomposition(hint);
+  },
+  "click .assign-etym": function (event) {
+    event.preventDefault();
+    const role = event.currentTarget.getAttribute("data-role");
+    const value = event.currentTarget.getAttribute("data-value");
+    if (stage && role && value) stage.assignAsEtymologyRole(role, value);
   },
 });
 
@@ -274,6 +345,7 @@ Template.analysis_stage.helpers({
   radical: () => {
     return Session.get("stages.analysis.radical") || "?";
   },
+  hints: () => Session.get("stages.analysis.hints") || [],
 });
 
 Template.tree.helpers({

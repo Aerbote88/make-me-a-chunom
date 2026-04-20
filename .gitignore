@@ -9,3 +9,9 @@ server/output/*.json
 stroke_caps/node_modules/
 #stroke_caps
 node_modules
+
+# Local-only editor / tooling
+.claude/settings.local.json
+
+# Build output of scripts/export-nom-data.js when no --out is passed
+dist/

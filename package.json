@@ -5,7 +5,8 @@
   "private": true,
   "scripts": {
     "start": "meteor run",
-    "validate": "tsx scripts/validate-stroke-data.ts"
+    "validate": "tsx scripts/validate-stroke-data.ts",
+    "export-nom": "node scripts/export-nom-data.js --out ../chunom-stroke-data/data"
   },
   "dependencies": {
     "@babel/runtime": "^7.24.0",
